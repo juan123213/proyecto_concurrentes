@@ -200,31 +200,23 @@ if st.button("Descargar imágenes con la configuración seleccionada"):
         #print("kernel",kernel)
         
     else:
-        seccion = st.e
+        
         st.success("Descargando imágenes de {}".format(tema_descargas)) 
         
        
         
-        st.button("mostrar 10 imagenes random de las descargadas")
-            
-        framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))  
+st.button("mostrar 10 imágenes random de las descargadas")
+    
+framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))  
 
 
-        kernel =st.radio("Qué tipo de filtro quieres usar?", ("El primero de los Class 1", "El primero de los Class 2",
-                                                        "El primero de los Class 3", "Square 3x3",
-                                                        "El primero de los Edge 3x3", "Square 5x5",
-                                                        "El primero de los Edge 5x5", " sobel vertical y horizontalmente",
-                                                        "Laplace", "prewitt vertical y horizontalmente"))  
+kernel =st.radio("Qué tipo de filtro quieres usar?", ("El primero de los Class 1", "El primero de los Class 2",
+                                                "El primero de los Class 3", "Square 3x3",
+                                                "El primero de los Edge 3x3", "Square 5x5",
+                                                "El primero de los Edge 5x5", " sobel vertical y horizontalmente",
+                                                "Laplace", "prewitt vertical y horizontalmente"))  
 
 
-        hilos= st.radio ("¿cantidad de hilos quieres usar?", ("1", "2", "4", "6", "8"))  
+hilos= st.radio ("¿cantidad de hilos quieres usar?", ("1", "2", "4", "6", "8"))  
         
-
-
-
-        
-        
-
-
-
-
+st.button("Aplicar filtro a las imágenes")
