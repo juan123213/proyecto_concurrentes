@@ -1,0 +1,25 @@
+# .gitignore
+
+# Entornos virtuales
+.venv/
+
+# Archivos generados por Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyc
+
+# Archivos generados por editor/IDE
+.vscode/
+.idea/
+
+# Archivos de compilación y ejecución
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de registro y caché
+*.log
+*.cache
+*.swp

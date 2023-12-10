@@ -1,0 +1,3 @@
+streamlit
+bing-image-downloader
+opencv-python
