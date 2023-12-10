@@ -189,20 +189,42 @@ kernelprueba = np.array([
 
 st.title("""Proyecto Final - Programación Concurrente y Distribuida""")
 
+tema_descargas = st.text_input("Y hoy ¿Acerca de qué quieres descargar imágenes?") 
+
+if st.button("Descargar imágenes con la configuración seleccionada"):
+    if tema_descargas == "":
+        st.error("No has seleccionado un tema de descargas")
+        #print("hilos ",hilos)
+        #print("framework ",framework)
+        #print("tema_descargas",tema_descargas)
+        #print("kernel",kernel)
+        
+    else:
+        seccion = st.e
+        st.success("Descargando imágenes de {}".format(tema_descargas)) 
+        
+       
+        
+        st.button("mostrar 10 imagenes random de las descargadas")
+            
+        framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))  
 
 
-tema_descargas = st.text_input("Y hoy ¿Acerca de qué quieres descargar imágenes?")
-print(tema_descargas)
+        kernel =st.radio("Qué tipo de filtro quieres usar?", ("El primero de los Class 1", "El primero de los Class 2",
+                                                        "El primero de los Class 3", "Square 3x3",
+                                                        "El primero de los Edge 3x3", "Square 5x5",
+                                                        "El primero de los Edge 5x5", " sobel vertical y horizontalmente",
+                                                        "Laplace", "prewitt vertical y horizontalmente"))  
 
-framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))
-print(framework)
+
+        hilos= st.radio ("¿cantidad de hilos quieres usar?", ("1", "2", "4", "6", "8"))  
+        
 
 
-kernel =st.radio("Qué tipo de filtro quieres usar?", ("El primero de los Class 1", "El primero de los Class 2",
-                                              "El primero de los Class 3", "Square 3x3",
-                                              "El primero de los Edge 3x3", "Square 5x5",
-                                              "El primero de los Edge 5x5", " sobel vertical y horizontalmente",
-                                              "Laplace", "prewitt vertical y horizontalmente"))
-print(kernel)
-hilos = st.radio("¿Cantidad de hilos que quieres usar?", ("1", "2", "4", "6", "8"))
-print(hilos)
+
+        
+        
+
+
+
+
