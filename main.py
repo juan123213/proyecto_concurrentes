@@ -6,6 +6,8 @@ from bing_image_downloader import downloader
 import cv2
 import random
 import multiprocessing
+import sys
+
 
 def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
     altura, ancho = imagen_gris.shape
@@ -275,7 +277,26 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
         st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
 
     elif (framework == "MPI4py"):
-        print("mpi4py")
+        comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', "downloads/superheroes 1/Image_1.jpg", selected_kernel_name]
+        procesompi = subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Leer la salida y error del subproceso
+        salida, error = procesompi.communicate()
+
+        if procesompi.returncode == 0:
+            st.success("Convolución completada con éxito.")
+            
+            # Cargar el resultado de la matriz
+            try:
+                resultado_convolucion = np.load('resultado_convolucion.npy')
+                # Aquí puedes hacer algo con la matriz, como mostrarla
+                st.image(resultado_convolucion, caption='Descripción de la imagen', use_column_width=True)
+            except IOError:
+                st.error("No se pudo cargar el resultado de la convolución.")
+        else:
+            st.error("Error en la ejecución de la convolución MPI.")
+            st.text(error.decode())
+
+
     else:
 
        st.error("error")
