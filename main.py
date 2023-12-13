@@ -7,7 +7,7 @@ import cv2
 import random
 import multiprocessing
 
-def convolucion_paralela(imagen_gris, kernel, num_procesos):
+def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
     altura, ancho = imagen_gris.shape
     k_altura, k_ancho = kernel.shape
 
@@ -66,6 +66,16 @@ def image_to_grayscale_matrix(image_path):
 
     return grayscale_matrix
 
+
+def matriz_a_imagen_gris(matriz):
+    # Normaliza la matriz para asegurar que los valores estén en el rango 0-255
+    matriz_normalizada = ((matriz - np.min(matriz)) / (np.max(matriz) - np.min(matriz)) * 255).astype(np.uint8)
+
+    # Convierte la matriz normalizada a una imagen en escala de grises
+    imagen_gris = cv2.cvtColor(matriz_normalizada, cv2.COLOR_GRAY2BGR)
+
+    return imagen_gris
+
 def convolucionsecuencial(imagen, kernel):
     altura, ancho = imagen.shape
     k_altura, k_ancho = kernel.shape
@@ -81,7 +91,7 @@ def convolucionsecuencial(imagen, kernel):
 
 
 def download_images(tema, numerohilo):
-    downloader.download(f'{tema} {numerohilo}', limit=100,  output_dir='downloads', adult_filter_off=True, force_replace=False, timeout=60, verbose=True)
+    downloader.download(f'{tema} {numerohilo}', limit=5,  output_dir='downloads', adult_filter_off=True, force_replace=False, timeout=60, verbose=True)
 
 
 def descarga():
@@ -238,7 +248,7 @@ if st.button("Descargar imágenes con la configuración seleccionada", key="butt
 
 st.button("mostrar 10 imágenes random de las descargadas", key="button3")
 
-framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))
+framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("secuencial","C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))
 st.success(f"Librería seleccionado: {framework}")
 
 kernel_names = list(kernels.keys())
@@ -250,11 +260,22 @@ st.success(f"Kernel seleccionado: {selected_kernel_name}")
 
 hilos= st.radio ("¿cantidad de hilos quieres usar?", ("1", "2", "4", "6", "8"))
 
+procesos= st.radio ("¿cantidad de procesos que quieres usar?", ("1", "2", "4", "6", "8"))
 
-if st.button("Aplicar filtro a las imágenes", key="button3"):
-    if (framework == "multiprocessing"):
-        convolucion_paralela()
 
+if st.button("Aplicar filtro a las imágenes", key="button5"):
+    imagen=image_to_grayscale_matrix("downloads/superheroes 1/Image_1.jpg")
+    if (framework == "secuencial"):
+        resultado=convolucionsecuencial(imagen,selected_kernel)
+        resultado= matriz_a_imagen_gris(resultado)
+        st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
+    elif (framework == "multiprocessing"):
+        resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,procesos)
+        resultado= matriz_a_imagen_gris(resultado)
+        st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
+
+    elif (framework == "MPI4py"):
+        print("mpi4py")
     else:
 
-       "hello"
+       st.error("error")
