@@ -8,6 +8,8 @@ import random
 import multiprocessing
 import sys
 import os
+import time
+
 
 def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
     altura, ancho = imagen_gris.shape
@@ -69,8 +71,6 @@ def image_to_grayscale_matrix(image_path):
 
     return contrasted_matrix
 
-
-
 def matriz_a_imagen_gris(matriz):
     # Normaliza la matriz para asegurar que los valores estén en el rango 0-255
     matriz_normalizada = ((matriz - np.min(matriz)) / (np.max(matriz) - np.min(matriz)) * 255).astype(np.uint8)
@@ -81,6 +81,7 @@ def matriz_a_imagen_gris(matriz):
     return imagen_gris
 
 def convolucionsecuencial(imagen, kernel):
+    
     altura, ancho = imagen.shape
     k_altura, k_ancho = kernel.shape
     resultado = np.zeros((altura - k_altura + 1, ancho - k_ancho + 1))
@@ -89,15 +90,26 @@ def convolucionsecuencial(imagen, kernel):
         for j in range(ancho - k_ancho + 1):
             submatriz = imagen[i:i+k_altura, j:j+k_ancho]
             resultado[i, j] = np.sum(submatriz * kernel)
+    end_time = time.time()
 
-    return resultado
+    return resultado 
 
 
 
 def download_images(tema, numerohilo):
-    downloader.download(f'{tema} {numerohilo}', limit=5,  output_dir='downloads', adult_filter_off=True, force_replace=False, timeout=60, verbose=True)
-
-
+    # Descargar imágenes
+    downloader.download(f'{tema} {numerohilo}', limit=20, output_dir='downloads', adult_filter_off=True, force_replace=False, timeout=60, verbose=True)
+    
+    # Ruta del directorio de descargas
+    download_dir = f'downloads/{tema} {numerohilo}/'
+    
+    # Filtrar y mover solo las imágenes .jpg al directorio de descargas principal
+    for filename in os.listdir(download_dir):
+        if filename.lower().endswith('.jpg'):
+            source_path = os.path.join(download_dir, filename)
+            destination_path = os.path.join('downloads', filename)
+            os.rename(source_path, destination_path)     
+            
 def descarga():
     #Dirección de carpeta para cargar imagenes
     downloads = "downloads"
@@ -130,19 +142,36 @@ def descarga():
 
 def show_random_images(tema):
     # Obtener la lista de imágenes en la carpeta
-    image_names = os.listdir("downloads/agua 1")
+    image_names = os.listdir(f"downloads/{tema} 2")
 
     # Obtener 10 imágenes aleatorias
     random_image_names = random.sample(image_names, 5)
 
     # Mostrar las imágenes
     for image_name in random_image_names:
-        for i in range(5):
-            #imagen=image_to_grayscale_matrix("downloads/super heroes 1/Image_2.jpg")
-            image_path = os.path.join(f"downloads/agua 1/", image_name)
-            image = cv2.imread(image_path)
-            st.image(image, caption=image_name, use_column_width=True)
-            show_stats(image)
+        #imagen=image_to_grayscale_matrix("downloads/super heroes 1/Image_2.jpg")
+        image_path = os.path.join(f"downloads/{tema} 1/", image_name)
+        image = cv2.imread(image_path)
+        image=cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        st.image(image, caption=image_name, use_column_width=True)
+        show_stats(image)
+
+
+
+def show_secuencial_images(tema,kernel):
+    
+    ruta=f"downloads/{tema} 1/"
+    
+    start_time = time.time()
+    for iter in range(1,11):
+        imagen=image_to_grayscale_matrix(f"{ruta}Image_{iter}.jpg")
+        print(imagen)
+        resultado=convolucionsecuencial(imagen,kernel)
+        resultado= matriz_a_imagen_gris(resultado)
+        st.image(resultado, caption="image_name", use_column_width=True)
+        show_stats(resultado)
+    tiempoSecu = end_time - start_time
+    st.write("Tiempo de ejecución secuencial: ", tiempoSecu)
 
 
 # Función para mostrar las estadísticas de una imagen
@@ -272,19 +301,22 @@ procesos= st.radio ("¿cantidad de procesos que quieres usar?", ("1", "2", "4", 
 st.success(f"procesos seleccionado: {procesos}")
 
 if st.button("Aplicar filtro a las imágenes", key="button5"):
-    imagen=image_to_grayscale_matrix("downloads/agua 1/Image_2.jpg")
+    imagen=image_to_grayscale_matrix(f"downloads/{tema_descargas} 1/Image_1.jpg")
 
     if (framework == "secuencial"):
-        resultado=convolucionsecuencial(imagen,selected_kernel)
-        resultado= matriz_a_imagen_gris(resultado)
-        st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
+        
+        show_secuencial_images(tema_descargas,selected_kernel)
+        #resultado=convolucionsecuencial(imagen,selected_kernel)
+        #resultado= matriz_a_imagen_gris(resultado)
+        #st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
+        
     elif (framework == "multiprocessing"):
         resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,int(procesos))
         resultado= matriz_a_imagen_gris(resultado)
-        st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
+        st.image(resultado, caption='Descripción de la imagen', use_column_width=True)       
 
     elif (framework == "MPI4py"):
-        comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', "downloads/super heroes 1/Image_1.jpg", selected_kernel_name]
+        comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', f"downloads/{tema_descargas} 1/Image_1.jpg", selected_kernel_name]
         procesompi = subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Leer la salida y error del subproceso
         salida, error = procesompi.communicate()
