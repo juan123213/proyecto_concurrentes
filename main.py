@@ -7,7 +7,7 @@ import cv2
 import random
 import multiprocessing
 import sys
-
+import os
 
 def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
     altura, ancho = imagen_gris.shape
@@ -126,24 +126,33 @@ def descarga():
     hilo9.join()
     hilo10.join()
 
-def obtener_10_imagenes_aleatorias(base_path, num_images=10):
-    imagenes = []
+#funcion para mostrar 10 imagenes aleatorias de la carpeta descargas
 
-    for _ in range(num_images):
-        # Generar un número aleatorio entre 1 y 99
-        num = random.randint(1, 10)
-        # Construir el nombre del archivo de la imagen
-        nombre_imagen = f"Image_{num}.jpg"
-        # Construir la ruta completa de la imagen
-        ruta_imagen = f"/downloads/{num}/{nombre_imagen}"
-        # Añadir la ruta a la lista de imágenes
-        imagenes.append(ruta_imagen)
+def show_random_images(tema):
+    # Obtener la lista de imágenes en la carpeta
+    image_names = os.listdir("downloads/agua 1")
 
-    return imagenes
+    # Obtener 10 imágenes aleatorias
+    random_image_names = random.sample(image_names, 5)
+
+    # Mostrar las imágenes
+    for image_name in random_image_names:
+        for i in range(5):
+            #imagen=image_to_grayscale_matrix("downloads/super heroes 1/Image_2.jpg")
+            image_path = os.path.join(f"downloads/agua 1/", image_name)
+            image = cv2.imread(image_path)
+            st.image(image, caption=image_name, use_column_width=True)
+            show_stats(image)
 
 
-#def image_stats(image):
-    
+# Función para mostrar las estadísticas de una imagen
+def show_stats(image):
+    st.write("Shape:", image.shape)
+    st.write("DType:", image.dtype)
+    st.write("Min. value:", image.min())
+    st.write("Max value:", image.max())
+    st.write("Mean:", image.mean())
+
 
 
 #Kernels
@@ -231,10 +240,6 @@ tema_descargas = st.text_input("Y hoy ¿Acerca de qué quieres descargar imágen
 if st.button("Descargar imágenes con la configuración seleccionada", key="button1"):
     if tema_descargas == "":
         st.error("No has seleccionado un tema de descargas")
-        #print("hilos ",hilos)
-        #print("framework ",framework)
-        #print("tema_descargas",tema_descargas)
-        #print("kernel",kernel)
 
     else:
 
@@ -252,25 +257,23 @@ if st.button("Descargar imágenes con la configuración seleccionada", key="butt
         hilo10 = threading.Thread(target=download_images, name='Hilo 10', args=(tema_descargas,10,))
         descarga()
 
-st.button("mostrar 10 imágenes random de las descargadas", key="button3")
-
 framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("secuencial","C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))
 st.success(f"Librería seleccionado: {framework}")
 
 kernel_names = list(kernels.keys())
-
 selected_kernel_name = st.radio("Selecciona un Kernel", kernel_names)
-
 selected_kernel = kernels[selected_kernel_name]
 st.success(f"Kernel seleccionado: {selected_kernel_name}")
 
 hilos= st.radio ("¿cantidad de hilos quieres usar?", ("1", "2", "4", "6", "8"))
+st.success(f"hilos seleccionado: {hilos}")
 
 procesos= st.radio ("¿cantidad de procesos que quieres usar?", ("1", "2", "4", "6", "8"))
-
+st.success(f"procesos seleccionado: {procesos}")
 
 if st.button("Aplicar filtro a las imágenes", key="button5"):
-    imagen=image_to_grayscale_matrix("downloads/super heroes 1/Image_2.jpg")
+    imagen=image_to_grayscale_matrix("downloads/agua 1/Image_2.jpg")
+
     if (framework == "secuencial"):
         resultado=convolucionsecuencial(imagen,selected_kernel)
         resultado= matriz_a_imagen_gris(resultado)
@@ -299,8 +302,30 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
         else:
             st.error("Error en la ejecución de la convolución MPI.")
             st.text(error.decode())
+            
+    if (framework == "OpenMP"):
+        # Compilar el programa en C
+        subprocess.run(["gcc", "convolucion_openmp", "convolucion_openmp.c", "-lpthread"])
 
+        # Ejecutar el programa compilado
+        proceso = subprocess.Popen(["./convolucion_openmp"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # Leer la salida del subproceso
+        salida, error = proceso.communicate()
 
+        if proceso.returncode == 0:
+            st.success("Convolución completada con éxito.")
+            # Procesar y mostrar la salida
+            st.text(salida.decode())
+        else:
+            st.error("Error en la ejecución de la convolución en C.")
+            st.text(error.decode())
+    
+    if(tema_descargas!=""):
+        st.success("Mostrando 10 imágenes aleatorias de la carpeta descargas")
+        show_random_images(tema_descargas)
+    
+    
     else:
 
        st.error("error")
