@@ -216,7 +216,7 @@ def show_multiprocessing_images(tema,kernel, procesos):
     ancho_barras = 0.35
     
     barra1=ax.bar("Secuencial", secutime, ancho_barras, label="Secuencial")
-    barra2=ax.bar("Multiprocessing", tiempoSecu, ancho_barras, label="Multiprocessing")
+    barra2=ax.bar("Multiprocessing", tiempoMulti, ancho_barras, label="Multiprocessing")
     ax.set_ylabel('Tiempo de ejecución')
     ax.set_title('Tiempo de ejecución secuencial vs multiprocessing')
     ax.legend()
