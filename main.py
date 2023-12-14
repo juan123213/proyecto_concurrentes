@@ -10,6 +10,7 @@ import sys
 import os
 import time
 from PIL import Image
+import matplotlib.pyplot as plt
 
 def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
     altura, ancho = imagen_gris.shape
@@ -94,8 +95,6 @@ def convolucionsecuencial(imagen, kernel):
 
     return resultado 
 
-
-
 def download_images(tema, numerohilo):
     # Descargar imágenes
     downloader.download(f'{tema} {numerohilo}', limit=20, output_dir='downloads', adult_filter_off=True, force_replace=False, timeout=60, verbose=True)
@@ -156,8 +155,6 @@ def show_random_images(tema):
         st.image(image, caption=image_name, use_column_width=True)
         show_stats(image)
 
-
-
 def show_secuencial_images(tema,kernel):
     
     ruta=f"downloads/{tema} 2/"
@@ -177,6 +174,20 @@ def show_secuencial_images(tema,kernel):
     end_time = time.time()
     tiempoSecu = end_time - start_time
     st.write("Tiempo de ejecución secuencial: ", tiempoSecu)
+
+def secuencial_time(tema,kernel):
+    
+    ruta=f"downloads/{tema} 2/"
+    
+    start_time = time.time()
+    for iter in range(1,11):      
+        imagen=Image.open(f"{ruta}Image_{iter}.jpg")      
+        imagen=image_to_grayscale_matrix(f"{ruta}Image_{iter}.jpg")
+        resultado=convolucionsecuencial(imagen,kernel)
+        resultado = np.clip(resultado, 0.0, 1.0)
+    end_time = time.time()
+    tiempoSecu = end_time - start_time
+    return tiempoSecu
     
 def show_multiprocessing_images(tema,kernel, procesos):
        
@@ -195,8 +206,21 @@ def show_multiprocessing_images(tema,kernel, procesos):
         st.image(resultado, caption='Descripción de la imagen', use_column_width=True) 
         show_stats(resultado)
     end_time = time.time()
-    tiempoSecu = end_time - start_time
-    st.write("Tiempo de ejecución secuencial: ", tiempoSecu)
+    tiempoMulti = end_time - start_time
+    st.write("Tiempo de ejecución en multiprocessing: ", tiempoMulti)
+    
+    secutime = secuencial_time(tema,kernel)
+    st.write("Tiempo de ejecución secuencial: ", secutime)
+    
+    fig, ax = plt.subplots()
+    ancho_barras = 0.35
+    
+    barra1=ax.bar("Secuencial", secutime, ancho_barras, label="Secuencial")
+    barra2=ax.bar("Multiprocessing", tiempoSecu, ancho_barras, label="Multiprocessing")
+    ax.set_ylabel('Tiempo de ejecución')
+    ax.set_title('Tiempo de ejecución secuencial vs multiprocessing')
+    ax.legend()
+    st.pyplot(fig)
 
 
 # Función para mostrar las estadísticas de una imagen
@@ -288,7 +312,9 @@ kernels= {
       [1, 1, 1]
     ])}
 st.title("Proyecto Final - Programación Concurrente y Distribuida")
-
+st.write("Integrantes: ")
+st.write("Juan Giraldo")
+st.write("Jhohan Stiwar Giraldo - 7017")
 tema_descargas = st.text_input("Y hoy ¿Acerca de qué quieres descargar imágenes?")
 
 if st.button("Descargar imágenes", key="button1"):
@@ -311,18 +337,26 @@ if st.button("Descargar imágenes", key="button1"):
         hilo10 = threading.Thread(target=download_images, name='Hilo 10', args=(tema_descargas,10,))
         descarga()
 
-framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("secuencial","C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))
-st.success(f"Librería seleccionado: {framework}")
+#framework= st.radio("¿Qué tipo de framework o librería quieres usar?", ("secuencial","C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"))
+#st.success(f"Librería seleccionado: {framework}")
+
+#if st.button("Que framework quieres usar", key="button2"):
+opciones = ["secuencial","C", "OpenMP", "MPI4py", "PyCUDA", "multiprocessing"]
+framework = st.selectbox("Selecciona un framework", opciones)
+
+st.success(f"framework seleccionado: {framework}")
+
 
 kernel_names = list(kernels.keys())
-selected_kernel_name = st.radio("Selecciona un Kernel", kernel_names)
+#selected_kernel_name = st.radio("Selecciona un Kernel", kernel_names)
+selected_kernel_name = st.selectbox("Selecciona un Kernel", kernel_names)
 selected_kernel = kernels[selected_kernel_name]
 st.success(f"Kernel seleccionado: {selected_kernel_name}")
 
-hilos= st.radio ("¿cantidad de hilos quieres usar?", ("1", "2", "4", "6", "8"))
+hilos= st.number_input("¿cantidad de hilos que quieres usar?", min_value=1, max_value=12, value=1)
 st.success(f"hilos seleccionado: {hilos}")
 
-procesos= st.radio ("¿cantidad de procesos que quieres usar?", ("1", "2", "4", "6", "8"))
+procesos= st.number_input("¿cantidad de procesos que quieres usar?", min_value=1, max_value=6, value=1)
 st.success(f"procesos seleccionado: {procesos}")
 
 if st.button("Aplicar filtro a las imágenes", key="button5"):
@@ -331,19 +365,13 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
     if (framework == "secuencial"):
         
         show_secuencial_images(tema_descargas,selected_kernel)
-        #resultado=convolucionsecuencial(imagen,selected_kernel)
-        #resultado= matriz_a_imagen_gris(resultado)
-        #st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
         
     elif (framework == "multiprocessing"):
         
-        show_multiprocessing_images(tema_descargas,selected_kernel, int(procesos))
-        #resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,int(procesos))
-        #resultado= matriz_a_imagen_gris(resultado)
-        #st.image(resultado, caption='Descripción de la imagen', use_column_width=True)       
+        show_multiprocessing_images(tema_descargas,selected_kernel, int(procesos)) 
 
     elif (framework == "MPI4py"):
-        comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', f"downloads/{tema_descargas} 1/Image_1.jpg", selected_kernel_name]
+        comando = ['mpiexec', '-n', str(procesos), sys.executable, 'convolucionmpi4.py', f"downloads/{tema_descargas} 1/Image_1.jpg", selected_kernel]
         procesompi = subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Leer la salida y error del subproceso
         salida, error = procesompi.communicate()

@@ -2,3 +2,4 @@ streamlit
 bing-image-downloader
 opencv-python
 mpi4py
+matplotlib
