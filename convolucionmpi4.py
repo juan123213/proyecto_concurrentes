@@ -15,10 +15,11 @@ def image_to_grayscale_matrix(image_path):
 
     # Convertir la imagen a escala de grises
     grayscale_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    grayscale_image = np.clip(grayscale_image, 0.0, 1.0)
 
     # Obtener la matriz de la imagen en escala de grises
     grayscale_matrix = np.array(grayscale_image)
-
+    grayscale_matrix =np.clip(grayscale_matrix, 0.0, 1.0)
     return grayscale_matrix
 
 def aplicar_convolucion_mpi(seccion, kernel):

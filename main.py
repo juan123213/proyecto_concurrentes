@@ -9,7 +9,7 @@ import multiprocessing
 import sys
 import os
 import time
-
+from PIL import Image
 
 def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
     altura, ancho = imagen_gris.shape
@@ -107,7 +107,7 @@ def download_images(tema, numerohilo):
     for filename in os.listdir(download_dir):
         if filename.lower().endswith('.jpg'):
             source_path = os.path.join(download_dir, filename)
-            destination_path = os.path.join('downloads', filename)
+            destination_path = os.path.join(f'downloads/{tema} {numerohilo}/', filename)
             os.rename(source_path, destination_path)     
             
 def descarga():
@@ -160,16 +160,41 @@ def show_random_images(tema):
 
 def show_secuencial_images(tema,kernel):
     
+    ruta=f"downloads/{tema} 2/"
+    
+    start_time = time.time()
+    for iter in range(1,11):
+        
+        imagen=Image.open(f"{ruta}Image_{iter}.jpg")
+        st.image(imagen, caption='Imagén en crudo', use_column_width=True)
+        imagen=image_to_grayscale_matrix(f"{ruta}Image_{iter}.jpg")
+        st.image(imagen, caption="imagen en escala de grises", use_column_width=True)
+        resultado=convolucionsecuencial(imagen,kernel)
+        resultado = np.clip(resultado, 0.0, 1.0)
+        #resultado= matriz_a_imagen_gris(resultado)
+        st.image(resultado, caption="imagen con filtro", use_column_width=True)
+        show_stats(resultado)
+    end_time = time.time()
+    tiempoSecu = end_time - start_time
+    st.write("Tiempo de ejecución secuencial: ", tiempoSecu)
+    
+def show_multiprocessing_images(tema,kernel, procesos):
+       
     ruta=f"downloads/{tema} 1/"
     
     start_time = time.time()
     for iter in range(1,11):
+        
+        imagen=Image.open(f"{ruta}Image_{iter}.jpg")
+        st.image(imagen, caption='Imagén en crudo', use_column_width=True)
         imagen=image_to_grayscale_matrix(f"{ruta}Image_{iter}.jpg")
-        print(imagen)
-        resultado=convolucionsecuencial(imagen,kernel)
-        resultado= matriz_a_imagen_gris(resultado)
-        st.image(resultado, caption="image_name", use_column_width=True)
+        st.image(imagen, caption="imagen en escala de grises", use_column_width=True)
+        resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,int(procesos))
+        resultado = np.clip(resultado, 0.0, 1.0)
+        #resultado= matriz_a_imagen_gris(resultado)
+        st.image(resultado, caption='Descripción de la imagen', use_column_width=True) 
         show_stats(resultado)
+    end_time = time.time()
     tiempoSecu = end_time - start_time
     st.write("Tiempo de ejecución secuencial: ", tiempoSecu)
 
@@ -266,7 +291,7 @@ st.title("Proyecto Final - Programación Concurrente y Distribuida")
 
 tema_descargas = st.text_input("Y hoy ¿Acerca de qué quieres descargar imágenes?")
 
-if st.button("Descargar imágenes con la configuración seleccionada", key="button1"):
+if st.button("Descargar imágenes", key="button1"):
     if tema_descargas == "":
         st.error("No has seleccionado un tema de descargas")
 
@@ -311,9 +336,11 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
         #st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
         
     elif (framework == "multiprocessing"):
-        resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,int(procesos))
-        resultado= matriz_a_imagen_gris(resultado)
-        st.image(resultado, caption='Descripción de la imagen', use_column_width=True)       
+        
+        show_multiprocessing_images(tema_descargas,selected_kernel, int(procesos))
+        #resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,int(procesos))
+        #resultado= matriz_a_imagen_gris(resultado)
+        #st.image(resultado, caption='Descripción de la imagen', use_column_width=True)       
 
     elif (framework == "MPI4py"):
         comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', f"downloads/{tema_descargas} 1/Image_1.jpg", selected_kernel_name]
@@ -324,9 +351,10 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
         if procesompi.returncode == 0:
             st.success("Convolución completada con éxito.")
             
-            # Cargar el resultado de la matriz
+            # Cargar el resultado de la matriz  
             try:
                 resultado_convolucion = np.load('resultado_convolucion.npy')
+                resultado_convolucion = np.clip(resultado_convolucion, 0.0, 1.0)
                 # Aquí puedes hacer algo con la matriz, como mostrarla
                 st.image(resultado_convolucion, caption='Descripción de la imagen', use_column_width=True)
             except IOError:
@@ -352,11 +380,6 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
         else:
             st.error("Error en la ejecución de la convolución en C.")
             st.text(error.decode())
-    
-    if(tema_descargas!=""):
-        st.success("Mostrando 10 imágenes aleatorias de la carpeta descargas")
-        show_random_images(tema_descargas)
-    
     
     else:
 
