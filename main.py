@@ -409,6 +409,3 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
             st.error("Error en la ejecución de la convolución en C.")
             st.text(error.decode())
     
-    else:
-
-       st.error("error")
