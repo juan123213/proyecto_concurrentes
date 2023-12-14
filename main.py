@@ -49,8 +49,6 @@ def aplicar_convolucion(seccion, kernel, resultados, indice):
 
     resultados[indice] = resultado
 
-
-
 def image_to_grayscale_matrix(image_path):
     # Leer la imagen
     original_image = cv2.imread(image_path)
@@ -63,10 +61,14 @@ def image_to_grayscale_matrix(image_path):
     # Convertir la imagen a escala de grises
     grayscale_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
 
-    # Obtener la matriz de la imagen en escala de grises
-    grayscale_matrix = np.array(grayscale_image)
+    # Aplicar ecualización del histograma para mejorar el contraste
+    contrasted_image = cv2.equalizeHist(grayscale_image)
 
-    return grayscale_matrix
+    # Obtener la matriz de la imagen con mayor contraste
+    contrasted_matrix = np.array(contrasted_image)
+
+    return contrasted_matrix
+
 
 
 def matriz_a_imagen_gris(matriz):
@@ -140,6 +142,8 @@ def obtener_10_imagenes_aleatorias(base_path, num_images=10):
     return imagenes
 
 
+#def image_stats(image):
+    
 
 
 #Kernels
@@ -266,18 +270,18 @@ procesos= st.radio ("¿cantidad de procesos que quieres usar?", ("1", "2", "4", 
 
 
 if st.button("Aplicar filtro a las imágenes", key="button5"):
-    imagen=image_to_grayscale_matrix("downloads/superheroes 1/Image_1.jpg")
+    imagen=image_to_grayscale_matrix("downloads/super heroes 1/Image_2.jpg")
     if (framework == "secuencial"):
         resultado=convolucionsecuencial(imagen,selected_kernel)
         resultado= matriz_a_imagen_gris(resultado)
         st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
     elif (framework == "multiprocessing"):
-        resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,procesos)
+        resultado=convolucion_paralela_multiprocessing(imagen,selected_kernel,int(procesos))
         resultado= matriz_a_imagen_gris(resultado)
         st.image(resultado, caption='Descripción de la imagen', use_column_width=True)
 
     elif (framework == "MPI4py"):
-        comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', "downloads/superheroes 1/Image_1.jpg", selected_kernel_name]
+        comando = ['mpiexec', '-n', procesos, sys.executable, 'convolucionmpi4.py', "downloads/super heroes 1/Image_1.jpg", selected_kernel_name]
         procesompi = subprocess.Popen(comando, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # Leer la salida y error del subproceso
         salida, error = procesompi.communicate()
