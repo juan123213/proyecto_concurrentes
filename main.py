@@ -37,7 +37,8 @@ def convolucion_paralela_multiprocessing(imagen_gris, kernel, num_procesos):
         proceso.join()
 
     # Combinar los resultados
-    resultado_final = np.concatenate(resultados)
+    #resultado_final = np.concatenate(resultados)
+    resultado_final = np.concatenate(resultados).astype(np.float32)
     return resultado_final
 
 def aplicar_convolucion(seccion, kernel, resultados, indice):
@@ -408,4 +409,5 @@ if st.button("Aplicar filtro a las imágenes", key="button5"):
         else:
             st.error("Error en la ejecución de la convolución en C.")
             st.text(error.decode())
+    
     
